@@ -1,9 +1,10 @@
 import { AppShell, Navbar, Header, Group, ActionIcon, useMantineColorScheme } from "@mantine/core";
 import { MoonStars, Sun } from "tabler-icons-react";
 import MainLinks from "./MainLinks";
+import { Outlet } from "react-router-dom";
 import { Logo } from "./Logo";
 
-const Layout = ({ children }) => {
+const Layout = () => {
     const { colorScheme, toggleColorScheme } = useMantineColorScheme();
 
     return (
@@ -34,7 +35,7 @@ const Layout = ({ children }) => {
                 },
             })}
         >
-            {children}
+            <Outlet />
         </AppShell>
     );
 };
