@@ -38,7 +38,7 @@ const Schedules = () => {
             <Table highlightOnHover mt={12} striped>
                 <thead>
                     <tr>
-                        <th>ID</th>
+                        <th>Nº</th>
                         <th>Name</th>
                         <th>Email </th>
                         <th>Birth Date </th>
@@ -56,10 +56,15 @@ const Schedules = () => {
                             <td>{schedule.email}</td>
                             <td>{moment(schedule.birthDate).format("DD/MM/YYYY")}</td>
                             <td>{moment(schedule.schedulingDay).format("DD/MM/YYYY")}</td>
-                            <td>{moment(schedule.schedulingTime).format("HH:mm")}</td>
+                            <td>{moment(schedule.schedulingTime).format("HH:MM")}</td>
                             <td>{schedule.wasAttended ? "Yes" : "No"}</td>
                             <td>
-                                <Button leftIcon={<Pencil />} variant="white" color="grey">
+                                <Button
+                                    leftIcon={<Pencil />}
+                                    onClick={() => navigate(schedule._id)}
+                                    variant="white"
+                                    color="grey"
+                                >
                                     Edit user
                                 </Button>
 
