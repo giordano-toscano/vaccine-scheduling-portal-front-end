@@ -1,8 +1,9 @@
-import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { BrowserRouter, Routes, Route, Outlet } from "react-router-dom";
 import Layout from "./components/Layout";
-import Registration from "./pages/Registration";
+import Registrations from "./pages/Registration";
 import Home from "./pages/Home";
 import Schedules from "./pages/Schedules";
+import Schedule from "./pages/Schedules/Schedule";
 
 const Router = () => {
     return (
@@ -10,8 +11,11 @@ const Router = () => {
             <Routes>
                 <Route path="/" element={<Layout />}>
                     <Route element={<Home />} index />
-                    <Route path="/registration" element={<Registration />} />
-                    <Route path="/schedules" element={<Schedules />} />
+                    <Route path="/registration" element={<Registrations />} />
+                    <Route path="/schedules" element={<Outlet />}>
+                        <Route element={<Schedules />} index />
+                        <Route element={<Schedule />} path=":scheduleId" />
+                    </Route>
                     <Route path="*" element={<h1>Not found</h1>} />
                 </Route>
             </Routes>
