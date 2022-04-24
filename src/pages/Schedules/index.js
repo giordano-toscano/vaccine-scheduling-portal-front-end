@@ -1,13 +1,15 @@
 import { showNotification } from "@mantine/notifications";
+import { Table, Button, Text } from "@mantine/core";
 import { Pencil, Trash } from "tabler-icons-react";
 import { useNavigate } from "react-router-dom";
-import { Table, Button } from "@mantine/core";
+import { parseISO, addHours } from "date-fns";
+import { useModals } from "@mantine/modals"; //
 import { useState, useEffect } from "react";
 import axios from "../../services/api";
 import moment from "moment";
-import { parseISO, addHours } from "date-fns";
 
 const Schedules = () => {
+    const modals = useModals();
     const navigate = useNavigate();
     const [schedules, setSchedules] = useState([]);
 
@@ -18,9 +20,19 @@ const Schedules = () => {
             .catch((error) => console.error(error));
     }, []);
 
+    const openConfirmModal = (id) =>
+        modals.openConfirmModal({
+            title: "Please confirm your action",
+            children: <Text size="sm">Are you sure you want to remove this schedule?</Text>,
+            labels: { confirm: "Confirm", cancel: "Cancel" },
+            onCancel: () => {},
+            onConfirm: () => onRemoveSchedule(id),
+        });
+
     const onCreateSchedule = () => {
         navigate("new");
     };
+
     const onRemoveSchedule = async (id) => {
         try {
             await axios.delete(`/schedules/${id}`);
@@ -44,6 +56,7 @@ const Schedules = () => {
     return (
         <div>
             <h1>Schedules ({schedules.length})</h1>
+
             <Button onClick={onCreateSchedule}>Create Schedule</Button>
             <>
                 {sortSchedules()}
@@ -88,9 +101,9 @@ const Schedules = () => {
                                         leftIcon={<Trash />}
                                         size="sm"
                                         mb={8}
-                                        onClick={() => onRemoveSchedule(schedule._id)}
                                         variant="filled"
                                         color="red"
+                                        onClick={() => openConfirmModal(schedule._id)}
                                     >
                                         Remove schedule
                                     </Button>
