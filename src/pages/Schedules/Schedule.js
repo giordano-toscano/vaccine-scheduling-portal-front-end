@@ -7,7 +7,6 @@ import "react-datepicker/dist/react-datepicker.css";
 import { showNotification } from "@mantine/notifications";
 import { useNavigate, useParams } from "react-router-dom";
 import axios from "../../services/api";
-//import moment from "moment";
 import { useState, useCallback, useEffect } from "react";
 
 const Schedule = () => {
@@ -55,7 +54,7 @@ const Schedule = () => {
                     showNotification({
                         color: "red",
                         title: "Error",
-                        message: error.response.data.message || error.message,
+                        message: error.response?.data?.message || error.message,
                     });
                     navigate("/schedules");
                 });
@@ -69,50 +68,53 @@ const Schedule = () => {
         }));
     };
 
+    //this method makes the scheduiling day (dd/MM/yyyy) and the scheduling time (HH:mm) match the same date (dd/MM/yyyy:HH:mm)
     const dateAdjust = (event) => {
-        console.log(form.schedulingDay);
-        let schedulingDayStringISO = form.schedulingDay.toISOString();
-        const [dateISO] = schedulingDayStringISO.split("T");
-
-        if (form.schedulingTime) {
-            let schedulingDateStringISO = form.schedulingTime.toISOString();
-            const [, timeISO] = schedulingDateStringISO.split("T");
-            schedulingDateStringISO = `${dateISO}T${timeISO}`;
-            let schedulingDate = parseISO(schedulingDateStringISO); // ISO String to Date
-            form.schedulingDay = subHours(schedulingDate, 0); // adds 3 hours to compensate
-            form.schedulingTime = form.schedulingDay;
-            console.log("Final com time: " + form.schedulingTime);
-        } else {
-            schedulingDayStringISO = `${dateISO}T00:00:00.000Z`;
-            let schedulingDayDate = parseISO(schedulingDayStringISO); // ISO String to Date
-            form.schedulingDay = addHours(schedulingDayDate, 3); // adds 3 hours to compensate
-            console.log("Final sem time: " + form.schedulingDay);
+        try {
+            console.log("DAY: " + form.schedulingDay);
+            console.log("TIME: " + form.schedulingTime);
+            const dateISO = splitISOString(form.schedulingDay)[0];
+            const timeISO = form.schedulingTime ? splitISOString(form.schedulingTime)[1] : "00:00:00.000Z";
+            console.log("TIMEISO: " + timeISO);
+            const schedulingDateStringISO = `${dateISO}T${timeISO}`;
+            const schedulingDate = parseISO(schedulingDateStringISO); // ISO String to Date
+            form.schedulingDay = form.schedulingTime ? schedulingDate : addHours(form.schedulingDay, 3);
+            form.schedulingTime = form.schedulingTime ? schedulingDate : "";
+            console.log("TIME TESTT: " + form.schedulingTime);
+            console.log(
+                form.schedulingTime ? "Final com time: " + form.schedulingTime : "Final sem time: " + form.schedulingDay
+            );
+        } catch (error) {
+            showNotification({
+                color: "red",
+                title: "Error",
+                message: error.response?.data?.message || error.message,
+            });
         }
     };
+    function splitISOString(schedulingDate) {
+        try {
+            return schedulingDate.toISOString().split("T");
+        } catch (error) {
+            throw new Error("Scheduling Date is Missing");
+        }
+    }
 
     const onSubmit = useCallback(async () => {
-        console.log("Scheduling Day: " + form.schedulingDay);
-        if (form.schedulingTime) {
-            console.log("Scheduling Time: " + form.schedulingTime);
-        }
-
-        /*const arrayDayMonthYear = form.schedulingDay.split("/"); // 0 1 2
-        const arrayHourMinutes = form.schedulingTime.split(":"); //0 1
-        const dateString = `${arrayDayMonthYear[2]}-${arrayDayMonthYear[1]}-${arrayDayMonthYear[0]}T${arrayHourMinutes[0]}:${arrayHourMinutes[1]}:00.000Z`;
-        const valorString = new Date(dateString).toString();
-        console.log(valorString);*/
-
-        //console.log(form.schedulingTime instanceof Date);
-        //console.log(`${form.schedulingDay}${form.schedulingTime}`); //2022-04-24T21:00:00.699Z
-        form.schedulingDay = subHours(form.schedulingDay, 3); // adds 3 hours to compensate
-        form.schedulingTime = form.schedulingDay;
         try {
+            if (form.schedulingTime) {
+                console.log("Scheduling Time: " + form.schedulingTime);
+                form.schedulingDay = subHours(form.schedulingDay, 3); // adds 3 hours to compensate
+                form.schedulingTime = form.schedulingDay;
+            } else {
+                throw new Error("'Scheduling Time' is missing");
+            }
+
             if (isNewSchedule) {
                 await axios.post("/schedules", form);
             } else {
                 await axios.put(`/schedules/${scheduleId}`, form);
             }
-            //console.log(form.schedulingTime);
             showNotification({
                 color: "green",
                 title: "Success",
@@ -123,7 +125,7 @@ const Schedule = () => {
             showNotification({
                 color: "red",
                 title: "Error",
-                message: error.response.data.message || error.message,
+                message: error.response?.data?.message || error.message,
             });
         }
     }, [form, navigate, scheduleId, isNewSchedule]);
@@ -233,9 +235,9 @@ const Schedule = () => {
             /> */}
 
             <Button
-                onClick={(date) => {
-                    dateAdjust(date);
-                    onSubmit(date);
+                onClick={() => {
+                    dateAdjust();
+                    onSubmit();
                 }}
                 mt={20}
             >
