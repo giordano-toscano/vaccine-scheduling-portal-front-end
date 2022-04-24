@@ -21,7 +21,8 @@
         "react-router-dom": "^6.3.0",
         "react-scripts": "5.0.1",
         "sass": "^1.50.1",
-        "tabler-icons-react": "^1.45.0"
+        "tabler-icons-react": "^1.45.0",
+        "yup": "^0.32.11"
     },
     "scripts": {
         "start": "react-scripts start",

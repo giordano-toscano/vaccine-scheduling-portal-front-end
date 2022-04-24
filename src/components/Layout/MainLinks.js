@@ -43,7 +43,7 @@ const routes = [
         icon: <CalendarEvent size={16} />,
         color: "orange",
         label: "Registration",
-        path: "/registration",
+        path: "/schedules/new",
     },
     {
         icon: <Database size={16} />,

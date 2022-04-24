@@ -5,6 +5,8 @@ import setHours from "date-fns/setHours";
 import setMinutes from "date-fns/setMinutes";
 import "react-datepicker/dist/react-datepicker.css";
 import { showNotification } from "@mantine/notifications";
+import { Form, Formik } from "formik";
+import * as yup from "yup";
 import { useNavigate, useParams } from "react-router-dom";
 import axios from "../../services/api";
 import { useState, useCallback, useEffect } from "react";
@@ -20,6 +22,42 @@ const Schedule = () => {
         schedulingTime: "",
         wasAttended: "no",
     });
+
+    const validate = yup.object({
+        name: yup
+            .string()
+            .required("No name provided")
+            .min(3, "Name is too short - should be 3 chars minimum")
+            .matches(/^[a-zA-Z ]+$/, "invalid name! please, try again"),
+        email: yup
+            .string()
+            .required("No password provided")
+            .min(8, "Password is too short - should be 8 chars minimum")
+            .matches(/[a-zA-Z]/, "Password can only contain Latin letters"),
+        birthDate: yup.string().required("No birth date provided"),
+        schedulingDate: yup.string().required("No scheduling date provided"),
+        schedulingTime: yup.string().required("No scheduling time provided"),
+    });
+
+    //localStorage.setItem("form", JSON.stringify(form));
+    /*const updateLocalStorage = () => {
+        /*let { name, email schedulingDay, schedulingTime, wasAttended } = form;
+        let newForm = { name, email, birthDate, schedulingDay, schedulingTime, wasAttended };
+        newForm.birthDate = Date(newForm.birthDate).toString();
+        newForm.schedulingDay = String(newForm.schedulingDay);
+        newForm.schedulingTime = String(newForm.schedulingTime);
+        console.log("kkk" + newForm.birthDate);
+        console.log("Birthdate: " + form.birthDate);
+        localStorage.setItem("name", form.name);
+        localStorage.setItem("email", form.email);
+        localStorage.setItem("birthDate", Date(form.birthDate).toString());
+    };
+    updateLocalStorage();
+    //let localStorageForm = localStorage.getItem("form");
+
+    //form = localStorage.getItem("form") !== null && "" ? localStorageForm : [];
+    */
+
     const isNewSchedule = scheduleId === "new";
     const pageTitle = isNewSchedule ? "Create Schedule" : "Edit Schedule";
 
@@ -77,9 +115,13 @@ const Schedule = () => {
             const timeISO = form.schedulingTime ? splitISOString(form.schedulingTime)[1] : "00:00:00.000Z";
             console.log("TIMEISO: " + timeISO);
             const schedulingDateStringISO = `${dateISO}T${timeISO}`;
+
             const schedulingDate = parseISO(schedulingDateStringISO); // ISO String to Date
+            schedulingDate.setMilliseconds(0);
+
             form.schedulingDay = form.schedulingTime ? schedulingDate : addHours(form.schedulingDay, 3);
             form.schedulingTime = form.schedulingTime ? schedulingDate : "";
+
             console.log("TIME TESTT: " + form.schedulingTime);
             console.log(
                 form.schedulingTime ? "Final com time: " + form.schedulingTime : "Final sem time: " + form.schedulingDay
@@ -109,8 +151,8 @@ const Schedule = () => {
             } else {
                 throw new Error("'Scheduling Time' is missing");
             }
-
             if (isNewSchedule) {
+                //console.log({ form });
                 await axios.post("/schedules", form);
             } else {
                 await axios.put(`/schedules/${scheduleId}`, form);
@@ -145,85 +187,117 @@ const Schedule = () => {
         <div>
             <h1>{pageTitle}</h1>
 
-            <InputWrapper required id="name" label="Name" mt={16}>
-                <Input id="name" name="name" placeholder="John Doe" value={form.name} onChange={onChange} />
-            </InputWrapper>
+            <Formik initialValues={form} enableReinitialize validationSchema={validate}>
+                {({ handleBlur, errors, touched, values }) => {
+                    return (
+                        <Form>
+                            <InputWrapper required id="name" label="Name" mt={16}>
+                                <Input
+                                    id="name"
+                                    name="name"
+                                    placeholder="John Doe"
+                                    value={form.name}
+                                    onChange={onChange}
+                                    onBlur={handleBlur}
+                                />
+                                {errors.name && touched.name ? (
+                                    <div style={{ color: "red", fontSize: 12 }}>{errors.name}</div>
+                                ) : null}
+                            </InputWrapper>
 
-            <InputWrapper required id="email" label="Email" mt={16}>
-                <Input id="email" name="email" placeholder="example@email.com" value={form.email} onChange={onChange} />
-            </InputWrapper>
+                            <InputWrapper required id="email" label="Email" mt={16}>
+                                <Input
+                                    id="email"
+                                    name="email"
+                                    placeholder="example@email.com"
+                                    value={form.email}
+                                    onChange={onChange}
+                                    onBlur={handleBlur}
+                                />
+                                {errors.email && touched.email ? (
+                                    <div style={{ color: "red", fontSize: 12 }}>{errors.birthDate}</div>
+                                ) : null}
+                            </InputWrapper>
 
-            <InputWrapper required id="birthDate" label="Birth Date" mt={16}>
-                <DatePicker
-                    placeholderText="Pick One"
-                    maxDate={new Date()}
-                    dateFormat={"dd/MM/yyyy"}
-                    timeFormat="00:00:00"
-                    //withPortal
-                    value={form.birthDate}
-                    selected={form.birthDate ? Date.parse(form.birthDate) : new Date()}
-                    onChange={(date) => {
-                        setStartDate(date);
-                        getBirthDate(date);
-                    }}
-                />
-            </InputWrapper>
+                            <InputWrapper required id="birthDate" label="Birth Date" mt={16}>
+                                <DatePicker
+                                    placeholderText="Pick One"
+                                    maxDate={new Date()}
+                                    dateFormat={"dd/MM/yyyy"}
+                                    timeFormat="00:00:00"
+                                    //withPortal
+                                    value={form.birthDate}
+                                    selected={form.birthDate ? Date.parse(form.birthDate) : new Date()}
+                                    onChange={(date) => {
+                                        setStartDate(date);
+                                        getBirthDate(date);
+                                    }}
+                                />
+                                {errors.birthDate && (
+                                    <div style={{ color: "red", fontSize: 12 }}>{errors.birthDate}</div>
+                                )}
+                            </InputWrapper>
 
-            <InputWrapper required id="schedulingDay" label="Scheduling Day" mt={16}>
-                <DatePicker
-                    placeholderText="Pick One"
-                    minDate={new Date()}
-                    dateFormat={"dd/MM/yyyy"}
-                    timeFormat="00:00:00"
-                    //withPortal
-                    value={form.schedulingDay}
-                    selected={form.schedulingDay ? Date.parse(form.schedulingDay) : new Date()}
-                    onChange={(date) => {
-                        setStartDate(date);
-                        getSchedulingDay(date);
-                        //((value) => dateAdjust({ target: { name: "schedulingDay", value } }))();
-                    }}
-                />
-            </InputWrapper>
+                            <InputWrapper required id="schedulingDay" label="Scheduling Day" mt={16}>
+                                <DatePicker
+                                    placeholderText="Pick One"
+                                    minDate={new Date()}
+                                    dateFormat={"dd/MM/yyyy"}
+                                    timeFormat="00:00:00"
+                                    //withPortal
+                                    value={form.schedulingDay}
+                                    selected={form.schedulingDay ? Date.parse(form.schedulingDay) : new Date()}
+                                    onChange={(date) => {
+                                        setStartDate(date);
+                                        getSchedulingDay(date);
+                                        //((value) => dateAdjust({ target: { name: "schedulingDay", value } }))();
+                                    }}
+                                />
+                                {errors.schedulingDay && (
+                                    <div style={{ color: "red", fontSize: 12 }}>{errors.schedulingDay}</div>
+                                )}
+                            </InputWrapper>
 
-            <InputWrapper required id="schedulingTime" label="Scheduling Time" mt={16}>
-                <DatePicker
-                    id="schedulingTime"
-                    placeholderText={form.schedulingDay ? "Pick One" : "Escolha uma data primeiro"}
-                    readOnly={form.schedulingDay ? false : true}
-                    showTimeSelect
-                    minTime={setHours(setMinutes(new Date(), 0), 6)}
-                    maxTime={setHours(setMinutes(new Date(), 0), 18)}
-                    showTimeSelectOnly
-                    timeIntervals={60}
-                    dateFormat="HH:00"
-                    timeFormat="HH:00"
-                    autcomplete="off"
-                    withPortal
-                    value={form.schedulingTime}
-                    selected={form.schedulingTime ? Date.parse(form.schedulingTime) : new Date()}
-                    onChange={(date) => {
-                        setStartDate(date);
-                        getSchedulingTime(date);
-                        //((value) => dateAdjust({ target: { name: "schedulingDay", value } }))();
-                    }}
-                    //locale="pt-BR"
-                />
-            </InputWrapper>
+                            <InputWrapper required id="schedulingTime" label="Scheduling Time" mt={16}>
+                                <DatePicker
+                                    id="schedulingTime"
+                                    placeholderText={form.schedulingDay ? "Pick One" : "Escolha uma data primeiro"}
+                                    readOnly={form.schedulingDay ? false : true}
+                                    showTimeSelect
+                                    minTime={setHours(setMinutes(new Date(), 0), 6)}
+                                    maxTime={setHours(setMinutes(new Date(), 0), 18)}
+                                    showTimeSelectOnly
+                                    timeIntervals={60}
+                                    dateFormat="HH:00"
+                                    timeFormat="HH:mm"
+                                    autocomplete={false}
+                                    withPortal
+                                    value={form.schedulingTime}
+                                    selected={form.schedulingTime ? Date.parse(form.schedulingTime) : new Date()}
+                                    onChange={(date) => {
+                                        setStartDate(date);
+                                        getSchedulingTime(date);
+                                        //((value) => dateAdjust({ target: { name: "schedulingDay", value } }))();
+                                    }}
+                                />
+                                {errors.schedulingTime && (
+                                    <div style={{ color: "red", fontSize: 12 }}>{errors.schedulingTime}</div>
+                                )}
+                            </InputWrapper>
 
-            <RadioGroup
-                required
-                label="Was Attended ?"
-                description="Has this schedule been concluded ?"
-                value={form.wasAttended}
-                onChange={(value) => onChange({ target: { name: "wasAttended", value } })}
-                mt={16}
-            >
-                <Radio value="yes" label="Yes" disabled={isNewSchedule} />
-                <Radio value="no" label="No" disabled={isNewSchedule} />
-            </RadioGroup>
+                            <RadioGroup
+                                required
+                                label="Was Attended ?"
+                                description="Has this schedule been concluded ?"
+                                value={form.wasAttended}
+                                onChange={(value) => onChange({ target: { name: "wasAttended", value } })}
+                                mt={16}
+                            >
+                                <Radio value="yes" label="Yes" disabled={isNewSchedule} />
+                                <Radio value="no" label="No" disabled={isNewSchedule} />
+                            </RadioGroup>
 
-            {/* <DatePicker
+                            {/* <DatePicker
                 showTimeSelect
                 minTime={setHours(setMinutes(new Date(), 0), 6)}
                 maxTime={setHours(setMinutes(new Date(), 0), 18)}
@@ -234,15 +308,19 @@ const Schedule = () => {
                 timeClassName={handleColor}
             /> */}
 
-            <Button
-                onClick={() => {
-                    dateAdjust();
-                    onSubmit();
+                            <Button
+                                onClick={() => {
+                                    dateAdjust();
+                                    onSubmit();
+                                }}
+                                mt={20}
+                            >
+                                {pageTitle}
+                            </Button>
+                        </Form>
+                    );
                 }}
-                mt={20}
-            >
-                {pageTitle}
-            </Button>
+            </Formik>
         </div>
     );
 };
