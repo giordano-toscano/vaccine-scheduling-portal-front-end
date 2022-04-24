@@ -5,6 +5,7 @@ import { Table, Button } from "@mantine/core";
 import { useState, useEffect } from "react";
 import axios from "../../services/api";
 import moment from "moment";
+import { parseISO, addHours } from "date-fns";
 
 const Schedules = () => {
     const navigate = useNavigate();
@@ -27,7 +28,7 @@ const Schedules = () => {
             showNotification({ color: "green", title: "Success", message: "Schedule Removed with Success" });
         } catch (error) {
             console.error(error);
-            showNotification({ color: "red", title: "Error", message: error.response.data.message }); //Failed to remove the schedule
+            showNotification({ color: "red", title: "Error", message: error.response.data.message || error.message }); //Failed to remove the schedule
         }
     };
 
@@ -35,15 +36,15 @@ const Schedules = () => {
         <div>
             <h1>Schedules ({schedules.length})</h1>
             <Button onClick={onCreateSchedule}>Create Schedule</Button>
-            <Table highlightOnHover mt={12} striped>
+            <Table highlightOnHover horizontalSpacing="xl" mt={12} striped>
                 <thead>
                     <tr>
                         <th>Nº</th>
                         <th>Name</th>
                         <th>Email </th>
                         <th>Birth Date </th>
-                        <th>Day</th>
-                        <th>Time</th>
+                        <th>Scheduling Day</th>
+                        <th>Scheduling Time</th>
                         <th>Was Attended ?</th>
                         <th>Actions</th>
                     </tr>
@@ -56,26 +57,31 @@ const Schedules = () => {
                             <td>{schedule.email}</td>
                             <td>{moment(schedule.birthDate).format("DD/MM/YYYY")}</td>
                             <td>{moment(schedule.schedulingDay).format("DD/MM/YYYY")}</td>
-                            <td>{moment(schedule.schedulingTime).format("HH:MM")}</td>
-                            <td>{schedule.wasAttended ? "Yes" : "No"}</td>
+                            <td>{moment(addHours(parseISO(schedule.schedulingTime), 3)).format("HH:00")}</td>
+                            <td>{schedule.wasAttended === "yes" ? "Yes" : "No"}</td>
                             <td>
                                 <Button
+                                    mb={8}
+                                    fullWidth={true}
                                     leftIcon={<Pencil />}
+                                    size="sm"
                                     onClick={() => navigate(schedule._id)}
-                                    variant="white"
+                                    variant="filled"
                                     color="grey"
                                 >
-                                    Edit user
+                                    Edit schedule
                                 </Button>
 
                                 <Button
+                                    fullWidth={true}
                                     leftIcon={<Trash />}
-                                    ml={16}
+                                    size="sm"
+                                    mb={8}
                                     onClick={() => onRemoveSchedule(schedule._id)}
-                                    variant="white"
+                                    variant="filled"
                                     color="red"
                                 >
-                                    Remove user
+                                    Remove schedule
                                 </Button>
                             </td>
                         </tr>
