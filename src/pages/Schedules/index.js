@@ -32,62 +32,74 @@ const Schedules = () => {
         }
     };
 
+    const sortSchedules = () => {
+        schedules.sort((a, b) => {
+            return (
+                new Date(a.schedulingDate) - new Date(b.schedulingDate) ||
+                new Date(a.schedulingTime) - new Date(b.schedulingTime)
+            );
+        });
+    };
+
     return (
         <div>
             <h1>Schedules ({schedules.length})</h1>
             <Button onClick={onCreateSchedule}>Create Schedule</Button>
-            <Table highlightOnHover horizontalSpacing="xl" mt={12} striped>
-                <thead>
-                    <tr>
-                        <th>Nº</th>
-                        <th>Name</th>
-                        <th>Email </th>
-                        <th>Birth Date </th>
-                        <th>Scheduling Day</th>
-                        <th>Scheduling Time</th>
-                        <th>Was Attended ?</th>
-                        <th>Actions</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {schedules.map((schedule, index) => (
-                        <tr key={index}>
-                            <td>{index}</td>
-                            <td>{schedule.name}</td>
-                            <td>{schedule.email}</td>
-                            <td>{moment(schedule.birthDate).format("DD/MM/YYYY")}</td>
-                            <td>{moment(schedule.schedulingDay).format("DD/MM/YYYY")}</td>
-                            <td>{moment(addHours(parseISO(schedule.schedulingTime), 3)).format("HH:00")}</td>
-                            <td>{schedule.wasAttended === "yes" ? "Yes" : "No"}</td>
-                            <td>
-                                <Button
-                                    mb={8}
-                                    fullWidth={true}
-                                    leftIcon={<Pencil />}
-                                    size="sm"
-                                    onClick={() => navigate(schedule._id)}
-                                    variant="filled"
-                                    color="grey"
-                                >
-                                    Edit schedule
-                                </Button>
-
-                                <Button
-                                    fullWidth={true}
-                                    leftIcon={<Trash />}
-                                    size="sm"
-                                    mb={8}
-                                    onClick={() => onRemoveSchedule(schedule._id)}
-                                    variant="filled"
-                                    color="red"
-                                >
-                                    Remove schedule
-                                </Button>
-                            </td>
+            <>
+                {sortSchedules()}
+                <Table highlightOnHover horizontalSpacing="xl" mt={12} striped>
+                    <thead>
+                        <tr>
+                            <th>Nº</th>
+                            <th>Name</th>
+                            <th>Email </th>
+                            <th>Birth Date </th>
+                            <th>Scheduling Day</th>
+                            <th>Scheduling Time</th>
+                            <th>Was Attended ?</th>
+                            <th>Actions</th>
                         </tr>
-                    ))}
-                </tbody>
-            </Table>
+                    </thead>
+                    <tbody>
+                        {schedules.map((schedule, index) => (
+                            <tr key={index}>
+                                <td>{index}</td>
+                                <td>{schedule.name}</td>
+                                <td>{schedule.email}</td>
+                                <td>{moment(schedule.birthDate).format("DD/MM/YYYY")}</td>
+                                <td>{moment(schedule.schedulingDay).format("DD/MM/YYYY")}</td>
+                                <td>{moment(addHours(parseISO(schedule.schedulingTime), 3)).format("HH:00")}</td>
+                                <td>{schedule.wasAttended === "yes" ? "Yes" : "No"}</td>
+                                <td>
+                                    <Button
+                                        mb={8}
+                                        fullWidth={true}
+                                        leftIcon={<Pencil />}
+                                        size="sm"
+                                        onClick={() => navigate(schedule._id)}
+                                        variant="filled"
+                                        color="grey"
+                                    >
+                                        Edit schedule
+                                    </Button>
+
+                                    <Button
+                                        fullWidth={true}
+                                        leftIcon={<Trash />}
+                                        size="sm"
+                                        mb={8}
+                                        onClick={() => onRemoveSchedule(schedule._id)}
+                                        variant="filled"
+                                        color="red"
+                                    >
+                                        Remove schedule
+                                    </Button>
+                                </td>
+                            </tr>
+                        ))}
+                    </tbody>
+                </Table>
+            </>
         </div>
     );
 };
