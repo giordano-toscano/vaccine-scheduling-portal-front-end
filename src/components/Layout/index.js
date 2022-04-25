@@ -1,12 +1,8 @@
-import { AppShell, Navbar, Header, Group, ActionIcon, useMantineColorScheme } from "@mantine/core";
-import { MoonStars, Sun } from "tabler-icons-react";
+import { AppShell, Navbar, Header, Group, Title } from "@mantine/core";
 import MainLinks from "./MainLinks";
 import { Outlet } from "react-router-dom";
-import { Logo } from "./Logo";
 
 const Layout = () => {
-    const { colorScheme, toggleColorScheme } = useMantineColorScheme();
-
     return (
         <AppShell
             padding="md"
@@ -20,11 +16,10 @@ const Layout = () => {
             }
             header={
                 <Header height={60}>
-                    <Group sx={{ height: "100%" }} px={20} position="apart">
-                        <Logo colorScheme={colorScheme} />
-                        <ActionIcon variant="default" onClick={() => toggleColorScheme()} size={30}>
-                            {colorScheme === "dark" ? <Sun size={16} /> : <MoonStars size={16} />}
-                        </ActionIcon>
+                    <Group sx={{ height: "100%" }} px={20} position="left">
+                        <Title order={4} align="left">
+                            Vaccine Scheduling Portal
+                        </Title>
                     </Group>
                 </Header>
             }

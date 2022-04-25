@@ -1,5 +1,5 @@
 import { showNotification } from "@mantine/notifications";
-import { Table, Button, Text } from "@mantine/core";
+import { Table, Button, Text, Code } from "@mantine/core";
 import { Pencil, Trash } from "tabler-icons-react";
 import { useNavigate } from "react-router-dom";
 import { parseISO, addHours } from "date-fns";
@@ -63,7 +63,7 @@ const Schedules = () => {
                 <Table highlightOnHover horizontalSpacing="xl" mt={12} striped>
                     <thead>
                         <tr>
-                            <th>Nº</th>
+                            <th>ID</th>
                             <th>Name</th>
                             <th>Email </th>
                             <th>Birth Date </th>
@@ -76,7 +76,9 @@ const Schedules = () => {
                     <tbody>
                         {schedules.map((schedule, index) => (
                             <tr key={index}>
-                                <td>{index}</td>
+                                <td>
+                                    <Code>{schedule._id}</Code>
+                                </td>
                                 <td>{schedule.name}</td>
                                 <td>{schedule.email}</td>
                                 <td>{moment(schedule.birthDate).format("DD/MM/YYYY")}</td>
