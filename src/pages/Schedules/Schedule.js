@@ -15,6 +15,9 @@ const Schedule = () => {
     const navigate = useNavigate();
     const { scheduleId } = useParams();
 
+    const isNewSchedule = scheduleId === "new";
+    const pageTitle = isNewSchedule ? "Create Schedule" : "Edit Schedule";
+
     const [form, setForm] = useState({
         name: "",
         email: "",
@@ -26,8 +29,18 @@ const Schedule = () => {
 
     useEffect(() => {
         const data = window.localStorage.getItem("form");
-        if (data !== null) setForm(JSON.parse(data));
-    }, []);
+
+        if (data !== null && isNewSchedule) {
+            const { birthDate, schedulingDay, schedulingTime, ...other } = JSON.parse(data);
+            setForm({
+                ...other,
+                birthDate: "",
+                schedulingDay: "",
+                schedulingTime: "",
+            });
+        }
+    }, [isNewSchedule]);
+
     useEffect(() => {
         window.localStorage.setItem("form", JSON.stringify(form));
     }, [form]);
@@ -42,13 +55,10 @@ const Schedule = () => {
         birthDate: yup.date("Invalid birth date").max(new Date()).required("No birth date provided"),
         schedulingDay: yup
             .date("Invalid scheduling date")
-            .min(new Date().toString(), "Não pode ser no passado !")
+            .min(new Date().toString(), "It can't be a date in the past !")
             .required("No scheduling date provided"),
         schedulingTime: yup.date("Invalid scheduling time").required("No scheduling time provided"),
     });
-
-    const isNewSchedule = scheduleId === "new";
-    const pageTitle = isNewSchedule ? "Create Schedule" : "Edit Schedule";
 
     const getBirthDate = (date) => {
         form.birthDate = date;
@@ -142,9 +152,14 @@ const Schedule = () => {
                 if (quantityInThisDate >= 20)
                     throw new Error("You cannot create more than 20 entries for the same date !");
 
-                await axios.post("/schedules", form);
+                await axios.post("/schedules", form).catch((error) => {
+                    throw new Error("Some fields are missing !");
+                });
             } else {
-                await axios.put(`/schedules/${scheduleId}`, form);
+                await axios.put(`/schedules/${scheduleId}`, form).catch((error) => {
+                    showErrorNotification(error);
+                    throw new Error("Soma fields are invalid !");
+                });
             }
 
             showNotification({
@@ -152,10 +167,10 @@ const Schedule = () => {
                 title: "Success",
                 message: `Schedule ${isNewSchedule ? "Created" : "Updated"} with Success`,
             });
+            navigate("/schedules");
         } catch (error) {
             showErrorNotification(error);
         }
-        navigate("/schedules");
     }, [form, navigate, scheduleId, isNewSchedule]);
 
     return (
@@ -250,7 +265,6 @@ const Schedule = () => {
                                     onChange={(date) => {
                                         setStartDate(date);
                                         getSchedulingTime(date);
-                                        //((value) => dateAdjust({ target: { name: "schedulingDay", value } }))();
                                     }}
                                 />
                                 {errors.schedulingTime && (
