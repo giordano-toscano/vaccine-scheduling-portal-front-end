@@ -2,7 +2,7 @@ import { showNotification } from "@mantine/notifications";
 import { Table, Button, Text, Code } from "@mantine/core";
 import { Pencil, Trash } from "tabler-icons-react";
 import { useNavigate } from "react-router-dom";
-import { parseISO, addHours } from "date-fns";
+import { parseISO, addHours, addDays } from "date-fns";
 import { useModals } from "@mantine/modals"; //
 import { useState, useEffect } from "react";
 import axios from "../../services/api";
@@ -82,7 +82,7 @@ const Schedules = () => {
                                 <td>{schedule.name}</td>
                                 <td>{schedule.email}</td>
                                 <td>{moment(schedule.birthDate).format("DD/MM/YYYY")}</td>
-                                <td>{moment(schedule.schedulingDay).format("DD/MM/YYYY")}</td>
+                                <td>{moment(addDays(parseISO(schedule.schedulingDay), 1)).format("DD/MM/YYYY")}</td>
                                 <td>{moment(addHours(parseISO(schedule.schedulingTime), 3)).format("HH:00")}</td>
                                 <td>{schedule.wasAttended === "yes" ? "Yes" : "No"}</td>
                                 <td>
