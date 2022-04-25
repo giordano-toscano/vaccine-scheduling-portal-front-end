@@ -24,6 +24,14 @@ const Schedule = () => {
         wasAttended: "no",
     });
 
+    useEffect(() => {
+        const data = window.localStorage.getItem("form");
+        if (data !== null) setForm(JSON.parse(data));
+    }, []);
+    useEffect(() => {
+        window.localStorage.setItem("form", JSON.stringify(form));
+    }, [form]);
+
     const validationSchema = yup.object({
         name: yup
             .string()
@@ -65,7 +73,7 @@ const Schedule = () => {
                     setForm({
                         ...data,
                         birthDate: parseISO(response.data.birthDate),
-                        schedulingDay: parseISO(response.data.schedulingDay),
+                        schedulingDay: addDays(parseISO(response.data.schedulingDay), 1),
                         schedulingTime: addHours(parseISO(response.data.schedulingTime), 3),
                     });
                 })
@@ -74,7 +82,7 @@ const Schedule = () => {
                     navigate("/schedules");
                 });
         }
-    }, [form, isNewSchedule, scheduleId, navigate]); //
+    }, [isNewSchedule, scheduleId, navigate]); //
 
     const onChange = (event) => {
         setForm((prevState) => ({
@@ -87,12 +95,14 @@ const Schedule = () => {
     const dateAdjust = (event) => {
         try {
             const dateISO = splitISOString(form.schedulingDay)[0];
-            const timeISO = form.schedulingTime ? splitISOString(form.schedulingTime)[1] : "00:00:00.000Z";
-            const schedulingDateStringISO = `${dateISO}T${timeISO}`;
-            let schedulingDate = parseISO(schedulingDateStringISO); // ISO String to Date
-            schedulingDate = subDays(schedulingDate, 1);
-            form.schedulingDay = schedulingDate;
-            form.schedulingTime = form.schedulingTime ? schedulingDate : "";
+            const schedulingDayISO = `${dateISO}T00:00:00.000Z`;
+
+            if (form.schedulingTime) {
+                const timeISO = splitISOString(form.schedulingTime)[1];
+                const schedulingTimeISO = `${dateISO}T${timeISO}`;
+                form.schedulingTime = parseISO(schedulingTimeISO);
+            }
+            form.schedulingDay = parseISO(schedulingDayISO);
         } catch (error) {
             showErrorNotification(error);
         }
@@ -116,29 +126,22 @@ const Schedule = () => {
 
     const onSubmit = useCallback(async () => {
         try {
-            if (isNewSchedule) {
-                form.schedulingTime = subHours(form.schedulingTime, 3);
-                form.schedulingDay = form.schedulingTime;
-            } else {
-                if (form.schedulingTime) {
-                    form.schedulingDay = addDays(form.schedulingDay, 1); // adds 3 hours to compensate
-                    form.schedulingTime = subHours(form.schedulingDay, 3);
-                    form.schedulingDay = form.schedulingTime;
-                } else {
-                    throw new Error("'Scheduling Time' is missing");
-                }
+            form.schedulingTime = subHours(form.schedulingTime, 3);
+            if (!isNewSchedule) {
+                form.schedulingDay = subDays(form.schedulingDay, 1);
+                form.schedulingTime = subDays(form.schedulingTime, 1);
             }
-
-            const timePath = await axios.get(`/schedules/date/${form.schedulingDay}/${form.schedulingTime}`);
-            let quantityinThisTime = timePath.data.item;
-            const datePath = await axios.get(`/schedules/date/${form.schedulingDay}`);
-            let quantityInThisDate = datePath.data.item;
-
-            if (quantityinThisTime >= 2) throw new Error("You cannot create more than 2 entries for the same time !");
-
-            if (quantityInThisDate >= 20) throw new Error("You cannot create more than 20 entries for the same time !");
-
             if (isNewSchedule) {
+                const timePath = await axios.get(`/schedules/date/${form.schedulingDay}/${form.schedulingTime}`);
+                let quantityinThisTime = timePath.data.item;
+                const datePath = await axios.get(`/schedules/date/${form.schedulingDay}`);
+                let quantityInThisDate = datePath.data.item;
+                if (quantityinThisTime >= 2)
+                    throw new Error("You cannot create more than 2 entries for the same time !");
+
+                if (quantityInThisDate >= 20)
+                    throw new Error("You cannot create more than 20 entries for the same date !");
+
                 await axios.post("/schedules", form);
             } else {
                 await axios.put(`/schedules/${scheduleId}`, form);
